@@ -237,6 +237,10 @@ func resourceServerCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"force_save_leaf": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"modified": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -333,7 +337,13 @@ func resourceServerCertificateCreate(d *schema.ResourceData, meta interface{}) e
 		servC.CertificateStatus = &servcCertificateStat
 	}
 
-	servCError := config.ovClient.CreateServerCertificate(servC)
+	forceSaveLeaf := d.Get("force_save_leaf").(bool)
+	var servCError error
+	if forceSaveLeaf == true {
+		servCError = config.ovClient.CreateServerCertificateForce(servC, forceSaveLeaf)
+	} else {
+		servCError = config.ovClient.CreateServerCertificate(servC)
+	}
 	var aliasname string
 	for _, servCDetail := range servC.CertificateDetails {
 		aliasname = servCDetail.AliasName
